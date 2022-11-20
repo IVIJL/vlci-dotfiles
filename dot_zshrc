@@ -197,7 +197,7 @@ if [ -x /usr/bin/dircolors ]; then
 fi
 
 # some more ls aliases
-alias ll='exa --icons --group-directories-first --time-style=long-iso -lsnew "${@:2}" -lha'
+alias ll='exa --icons --group-directories-first --octal-permissions --time-style=long-iso -lsnew "${@:2}" -lha'
 alias la='ls -A'
 alias l='ls -CF'
 alias lt='exa --tree --icons --level=2 --long --time-style=long-iso -ah -I ".git|__pycache__|.mypy_cache|.ipynb_checkpoints"'
