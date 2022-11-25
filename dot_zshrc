@@ -46,8 +46,8 @@ zstyle ':completion:*' completer _complete _approximate matcher-list 'm:{a-zA-Z}
 
 # History configurations
 HISTFILE=~/.bash_history
-HISTSIZE=1000
-SAVEHIST=2000
+HISTSIZE=4096
+SAVEHIST=4096
 setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
 setopt hist_ignore_dups       # ignore duplicated commands history list
 setopt hist_ignore_space      # ignore commands that start with space
@@ -197,10 +197,16 @@ if [ -x /usr/bin/dircolors ]; then
 fi
 
 # some more ls aliases
-alias ll='exa --icons --group-directories-first --octal-permissions --time-style=long-iso -lsnew "${@:2}" -lha'
-alias la='ls -A'
-alias l='ls -CF'
-alias lt='exa --tree --icons --level=2 --long --time-style=long-iso -ah -I ".git|__pycache__|.mypy_cache|.ipynb_checkpoints"'
+if which exa &> /dev/null; then
+    alias ll='exa --icons --group-directories-first --octal-permissions --time-style=long-iso -lsnew "${@:2}" -lha'
+    alias la='ls -A'
+    alias l='ls -CF'
+    alias lt='exa --tree --icons --level=2 --long --time-style=long-iso -ah -I ".git|__pycache__|.mypy_cache|.ipynb_checkpoints"'
+else
+    alias ll='ls -alhF'
+    alias la='ls -A'
+    alias l='ls -CF'
+fi
 
 # enable auto-suggestions based on the history
 if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
