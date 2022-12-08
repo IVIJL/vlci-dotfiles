@@ -52,6 +52,7 @@ format = "on [$hostname](bold yellow) "
 disabled = false
 
 [directory]
+fish_style_pwd_dir_length = 1
 truncation_length = 1
 truncation_symbol = "…/"
 home_symbol = " ~"
