@@ -38,12 +38,6 @@ bindkey '^[[H' beginning-of-line                  # home
 bindkey '^[[F' end-of-line                        # end
 bindkey '^[[Z' undo                               # shift + tab undo last action
 
-# enable completion features
-autoload -Uz compinit
-compinit -d ~/.cache/zcompdump
-zstyle ':completion:*:*:*:*:*' menu select
-zstyle ':completion:*' completer _complete _approximate matcher-list 'm:{a-zA-Z}={A-Za-z}' # case insensitive tab completion
-
 # History configurations
 HISTFILE=~/.bash_history
 HISTSIZE=4096
@@ -217,14 +211,26 @@ if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
     ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#999'
 fi
 
+# enable Z jump directory based on the history
+if [ -f /usr/share/zsh-z/zsh-z.plugin.zsh ]; then
+    source /usr/share/zsh-z/zsh-z.plugin.zsh
+    # Completion menus
+    zstyle ':completion:*' menu select
+fi
+
+#enable grc colorizer if installed
+[[ -s "/etc/grc.zsh" ]] && source /etc/grc.zsh
+
 # enable command-not-found if installed
 if [ -f /etc/zsh_command_not_found ]; then
     . /etc/zsh_command_not_found
 fi
-#Powerlevel10K
-#source ~/powerlevel10k/powerlevel10k.zsh-theme
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-#[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# enable completion features
+autoload -Uz compinit
+compinit -d ~/.cache/zcompdump
+zstyle ':completion:*:*:*:*:*' menu select
+zstyle ':completion:*' completer _complete _approximate matcher-list 'm:{a-zA-Z}={A-Za-z}' # case insensitive tab completion
 
 # find out which distribution we are running on
 LFILE="$(cat /etc/*-release 2>/dev/null)"
@@ -274,6 +280,10 @@ fi
 if [ -d "$HOME/.local/bin" ] ; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
+
+#Extra Aliases
+alias gh='history | grep '
+alias tail='grc tail'
 
 #Starship
 eval "$(starship init zsh)"
