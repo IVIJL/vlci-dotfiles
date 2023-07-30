@@ -5,3 +5,4 @@ set tabsize 2
 set tabstospaces
 set atblanks
 set constantshow
+bind ^Z suspend main

@@ -84,14 +84,16 @@ editor_stop_format_chars=-+*\\,.;:&>
 mcview_eof=
 skin=gotar
 
+shadows=true
+
 [Layout]
 output_lines=0
 left_panel_size=91
 top_panel_size=0
-message_visible=true
+message_visible=false
 keybar_visible=true
 xterm_title=true
-command_prompt=true
+command_prompt=false
 menubar_visible=true
 free_space=true
 horizontal_split=false
@@ -136,7 +138,7 @@ mouse_move_pages=true
 filetype_mode=true
 permission_mode=false
 torben_fj_mode=false
-quick_search_mode=2
+quick_search_mode=0
 select_flags=6
 
 [Panelize]
