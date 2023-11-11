@@ -19,7 +19,7 @@ format = """$env_var $all"""
 # Change the default prompt characters
 [character]
 # old config
-success_symbol = "[](green)"
+success_symbol = "[󰍟](green)"
 error_symbol = "[✗](red)"
 #success_symbol = ""
 #error_symbol = ""
@@ -55,13 +55,13 @@ disabled = false
 fish_style_pwd_dir_length = 1
 truncation_length = 1
 truncation_symbol = "…/"
-home_symbol = " ~"
+home_symbol = "󰋞 ~"
 read_only_style = "197"
 read_only = "  "
 format = "at [$path]($style)[$read_only]($read_only_style) "
 
 [git_branch]
-symbol = " "
+symbol = "󰊢 "
 format = "via [$symbol$branch]($style) "
 # truncation_length = 4
 truncation_symbol = "…/"
@@ -76,20 +76,20 @@ untracked = " "
 ahead = "⇡${count}"
 diverged = "⇕⇡${ahead_count}⇣${behind_count}"
 behind = "⇣${count}"
-stashed = " "
+stashed = "󰏗 "
 modified = " "
 staged = '[++\($count\)](green)'
-renamed = "襁 "
+renamed = "󰖷 "
 deleted = " "
 
 [kubernetes]
-format = 'via [ﴱ $context\($namespace\)](bold purple) '
+format = 'via [󰠳 $context\($namespace\)](bold purple) '
 disabled = false
 
 # (deactivated because of no space left)
 # 
 [terraform]
-format = "via [ terraform $version]($style) 壟 [$workspace]($style) "
+format = "via [ terraform $version]($style) 󰑃 [$workspace]($style) "
 disabled = true
 
 [vagrant]
@@ -105,12 +105,12 @@ format = "via [ $version](bold purple) "
 disabled = true
 
 [python]
-symbol = " "
+symbol = "󰌠 "
 python_binary = "python3"
 disabled = true
 
 [nodejs]
-format = "via [ $version](bold green) "
+format = "via [󰎙 $version](bold green) "
 disabled = true
 
 [ruby]
