@@ -143,6 +143,11 @@ if which exa &> /dev/null; then
     alias la='ls -A'
     alias l='ls -CF'
     alias lt='exa --tree --icons --level=2 --long --time-style=long-iso -ah -I ".git|__pycache__|.mypy_cache|.ipynb_checkpoints"'
+elif which eza &> /dev/null; then
+    alias ll='eza --icons --group-directories-first --octal-permissions --time-style=long-iso -lsnew "${@:2}" -lha'
+    alias la='ls -A'
+    alias l='ls -CF'
+    alias lt='eza --tree --icons --level=2 --long --time-style=long-iso -ah -I ".git|__pycache__|.mypy_cache|.ipynb_checkpoints"'
 else
     alias ll='ls -alhF'
     alias la='ls -A'
