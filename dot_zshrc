@@ -9,7 +9,8 @@
 # see /usr/share/doc/zsh/examples/zshrc for examples
 
 setopt autocd              # change directory just by typing its name
-setopt correct            # auto correct mistakes
+unsetopt correct           # auto correct mistakes
+unsetopt correctall
 setopt interactivecomments # allow comments in interactive mode
 setopt magicequalsubst     # enable filename expansion for arguments of the form ‘anything=expression’
 setopt nonomatch           # hide error message if there is no match for the pattern
@@ -177,6 +178,10 @@ if [ -f /etc/zsh_command_not_found ]; then
 fi
 
 # enable completion features
+# zsh-completions
+if [ -d /usr/share/zsh-completions/src ]; then
+    fpath=(/usr/local/share/zsh/site-functions /usr/share/zsh-completions/src $fpath)
+fi
 autoload -Uz compinit
 compinit -d ~/.cache/zcompdump
 zstyle ':completion:*:*:*:*:*' menu select
@@ -260,6 +265,20 @@ eval "$(starship init zsh)"
 # Enable fuzzy-search if available
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-# Enable syntax-highlighting if available
-[ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# fzf-tab (must be after compinit, before autosuggestions/syntax-highlighting)
+[ -f /usr/share/fzf-tab/fzf-tab.plugin.zsh ] && source /usr/share/fzf-tab/fzf-tab.plugin.zsh
 
+
+# Atuin (guarded)
+[ -s "$HOME/.atuin/bin/env" ] && . "$HOME/.atuin/bin/env"
+eval "$(atuin init zsh)"
+
+
+[ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+
+# . "$HOME/.local/bin/env"
+command -v uvx >/dev/null 2>&1 && eval "$(uvx --generate-shell-completion zsh)"
+command -v uv  >/dev/null 2>&1 && eval "$(uv  generate-shell-completion zsh)"
+
+# MUST BE AT END Enable syntax-highlighting if available
+[ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
