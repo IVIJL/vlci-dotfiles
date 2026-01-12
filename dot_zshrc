@@ -270,13 +270,11 @@ eval "$(starship init zsh)"
 
 
 # Atuin (guarded)
-[ -s "$HOME/.atuin/bin/env" ] && . "$HOME/.atuin/bin/env"
-eval "$(atuin init zsh)"
+[ -s "$HOME/.config/atuin/env" ] && . "$HOME/.config/atuin/env" && eval "$(atuin init zsh)"
 
 
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
-# . "$HOME/.local/bin/env"
 command -v uvx >/dev/null 2>&1 && eval "$(uvx --generate-shell-completion zsh)"
 command -v uv  >/dev/null 2>&1 && eval "$(uv  generate-shell-completion zsh)"
 
