@@ -159,7 +159,7 @@ fi
 if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
     . /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
     # change suggestion color
-    ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#999'
+    ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=242'
 fi
 
 # enable Z jump directory based on the history
@@ -284,6 +284,12 @@ if [ -d "$HOME/.pyenv" ] && [ -d "$HOME/.pyenv/bin" ]; then
     eval "$(pyenv init -)"
 fi
 
+# Načtení modulu pro úpravu příkazů v editoru
+autoload -U edit-command-line
+zle -N edit-command-line
+# Přiřazení ke klávesové zkratce Ctrl+X, E
+bindkey '^Xe' edit-command-line
+export EDITOR='nvim'  # nebo 'vim' nebo 'code --wait' pro VS Code
 
 
 # MUST BE AT END Enable syntax-highlighting if available
