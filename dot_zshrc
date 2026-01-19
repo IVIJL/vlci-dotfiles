@@ -268,10 +268,11 @@ eval "$(starship init zsh)"
 # fzf-tab (must be after compinit, before autosuggestions/syntax-highlighting)
 [ -f /usr/share/fzf-tab/fzf-tab.plugin.zsh ] && source /usr/share/fzf-tab/fzf-tab.plugin.zsh
 
-
 # Atuin (guarded)
-[ -s "$HOME/.config/atuin/env" ] && . "$HOME/.config/atuin/env" && eval "$(atuin init zsh)"
-
+if [ -s "$HOME/.config/atuin/env" ] && command -v atuin &>/dev/null; then
+  . "$HOME/.config/atuin/env"
+  eval "$(atuin init zsh)"
+fi
 
 [ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
