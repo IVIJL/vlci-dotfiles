@@ -269,7 +269,7 @@ eval "$(starship init zsh)"
 [ -f /usr/share/fzf-tab/fzf-tab.plugin.zsh ] && source /usr/share/fzf-tab/fzf-tab.plugin.zsh
 
 # Atuin (guarded)
-if [ -s "$HOME/.config/atuin/env" ] && command -v atuin &>/dev/null; then
+if [ -s "$HOME/.config/atuin/env" ] && [ -s "$HOME/.atuin/bin/atuin" ]; then
   . "$HOME/.config/atuin/env"
   eval "$(atuin init zsh)"
 fi
