@@ -279,10 +279,20 @@ fi
 command -v uvx >/dev/null 2>&1 && eval "$(uvx --generate-shell-completion zsh)"
 command -v uv  >/dev/null 2>&1 && eval "$(uv  generate-shell-completion zsh)"
 
-if [ -d "$HOME/.pyenv" ] && [ -d "$HOME/.pyenv/bin" ]; then
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init -)"
+export PYENV_ROOT="$HOME/.pyenv"
+
+if [ -x "$PYENV_ROOT/bin/pyenv" ]; then
+  # přidej pyenv bin jen jednou
+  case ":$PATH:" in
+    *":$PYENV_ROOT/bin:"*) : ;;
+    *) export PATH="$PYENV_ROOT/bin:$PATH" ;;
+  esac
+
+  # init path (shims)
+  eval "$("$PYENV_ROOT/bin/pyenv" init --path)"
+
+  # interaktivní init (zsh funkce/completion)
+  eval "$("$PYENV_ROOT/bin/pyenv" init - zsh)"
 fi
 
 # Načtení modulu pro úpravu příkazů v editoru
