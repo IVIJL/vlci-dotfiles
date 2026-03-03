@@ -1,32 +1,70 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-#if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-#  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-#fi
+# Generated from conf.d/ files
 
-# ~/.zshrc file for zsh interactive shells.
-# see /usr/share/doc/zsh/examples/zshrc for examples
+# ════════════════════════════════════════════════════════════════
+# Source: 01-options.zsh
+# ════════════════════════════════════════════════════════════════
+
+# Shell options and history configuration
 
 setopt autocd              # change directory just by typing its name
-unsetopt correct           # auto correct mistakes
-unsetopt correctall
 setopt interactivecomments # allow comments in interactive mode
-setopt magicequalsubst     # enable filename expansion for arguments of the form ‘anything=expression’
+setopt magicequalsubst     # enable filename expansion for 'anything=expression'
 setopt nonomatch           # hide error message if there is no match for the pattern
 setopt notify              # report the status of background jobs immediately
 setopt numericglobsort     # sort filenames numerically when it makes sense
 setopt promptsubst         # enable command substitution in prompt
+setopt extended_glob       # richer glob patterns (#, ~, ^)
+setopt null_glob           # no error if glob matches nothing
+unsetopt correct           # do not auto correct mistakes
+unsetopt correctall
 
-WORDCHARS=${WORDCHARS//\/} # Don't consider certain characters part of the word
+WORDCHARS=${WORDCHARS//\/} # Don't consider '/' part of the word
 
-#enable autocomplete plugin - Add at or near the top of your .zshrc file (before any calls to compdef)
-#source /usr/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
-
-# hide EOL sign ('%')
+# hide EOL sign ('%') — used by zsh internally
 PROMPT_EOL_MARK=""
 
-# configure key keybindings
+# History
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
+setopt hist_ignore_dups       # ignore duplicated commands in history list
+setopt hist_ignore_space      # ignore commands that start with space
+setopt hist_verify            # show command with history expansion before running it
+setopt append_history         # append to history file
+
+# ════════════════════════════════════════════════════════════════
+# Source: 02-path.zsh
+# ════════════════════════════════════════════════════════════════
+
+# Path configuration
+# Uses zsh path array (tied to $PATH). typeset -U removes duplicates.
+# $^path(N-/) filters out non-existent directories.
+
+export PYENV_ROOT="$HOME/.pyenv"
+export NVM_DIR="$HOME/.nvm"
+
+path=(
+    "$HOME/bin"
+    "$HOME/.local/bin"
+    "$PYENV_ROOT/bin"
+    "$PYENV_ROOT/shims"
+    "$HOME/.cargo/bin"
+    $path
+)
+
+# Remove duplicate entries and non-existent directories
+typeset -U path
+path=($^path(N-/))
+
+export PATH
+
+# ════════════════════════════════════════════════════════════════
+# Source: 03-keybindings.zsh
+# ════════════════════════════════════════════════════════════════
+
+# Key bindings
+
 bindkey -e                                        # emacs key bindings
 bindkey ' ' magic-space                           # do history expansion on space
 bindkey '^[[3;5~' kill-word                       # ctrl + Supr
@@ -39,93 +77,69 @@ bindkey '^[[H' beginning-of-line                  # home
 bindkey '^[[F' end-of-line                        # end
 bindkey '^[[Z' undo                               # shift + tab undo last action
 
-# History configurations
-HISTFILE=~/.bash_history
-HISTSIZE=4096
-SAVEHIST=4096
-setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
-setopt hist_ignore_dups       # ignore duplicated commands history list
-setopt hist_ignore_space      # ignore commands that start with space
-setopt hist_verify            # show command with history expansion to user before running it
-#setopt share_history         # share command history data
-setopt APPEND_HISTORY      # append to history
-#setopt INC_APPEND_HISTORY  # adds commands as they are typed, not at shell exit
+# Edit command line in $EDITOR with Ctrl+X, E
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey '^Xe' edit-command-line
+export EDITOR='nvim'
 
-# force zsh to show the complete history
-alias history="history 0"
+# ════════════════════════════════════════════════════════════════
+# Source: 04-completions.zsh
+# ════════════════════════════════════════════════════════════════
 
-# make less more friendly for non-text input files, see lesspipe(1)
-#[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+# Completion system
+#
+# NOTE: All fpath additions for plugins that ship a _completion file
+# MUST go here, BEFORE compinit. Plugins that use `compdef` (e.g. uv,
+# uvx) work fine after compinit and can stay in their own sections.
 
-# set variable identifying the chroot you work in (used in the prompt below)
-if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
-    debian_chroot=$(cat /etc/debian_chroot)
+# Add zsh-completions to fpath if available
+if [ -d /usr/share/zsh-completions/src ]; then
+    # shellcheck disable=SC2206
+    fpath=(/usr/local/share/zsh/site-functions /usr/share/zsh-completions/src $fpath)
 fi
 
-# override default virtualenv indicator in prompt
-VIRTUAL_ENV_DISABLE_PROMPT=1
-venv_info() {
-    [ $VIRTUAL_ENV ] && echo "(%B%F{reset}$(basename $VIRTUAL_ENV)%b%F{%(#.blue.green)})"
-}
-
-# set a fancy prompt (non-color, unless we know we "want" color)
-case "$TERM" in
-    xterm-color|*-256color) color_prompt=yes;;
-esac
-
-# uncomment for a colored prompt, if the terminal has the capability; turned
-# off by default to not distract the user: the focus in a terminal window
-# should be on the output of commands, not on the prompt
-force_color_prompt=yes
-
-if [ -n "$force_color_prompt" ]; then
-    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-        # We have color support; assume it's compliant with Ecma-48
-        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-        # a case would tend to support setf rather than setaf.)
-        color_prompt=yes
-    else
-        color_prompt=
-    fi
+# zsh-z ships _zshz completion file in its directory
+if [ -d /usr/share/zsh-z ]; then
+    # shellcheck disable=SC2206
+    fpath=(/usr/share/zsh-z $fpath)
 fi
 
-# If this is an xterm set the title to user@host:dir
-#case "$TERM" in
-#xterm*|rxvt*)
-#    TERM_TITLE=$'\e]0;${debian_chroot:+($debian_chroot)}%n@%m: %~\a'
-#    ;;
-#*)
-#    ;;
-#esac
-#
-#new_line_before_prompt=yes
-#precmd() {
-#    # Print the previously configured title
-#    print -Pnr -- "$TERM_TITLE"
-#
-#    # Print a new line before the prompt, but only if it is not the first line
-#    if [ "$new_line_before_prompt" = yes ]; then
-#        if [ -z "$_NEW_LINE_BEFORE_PROMPT" ]; then
-#            _NEW_LINE_BEFORE_PROMPT=1
-#        else
-#            print ""
-#        fi
-#    fi
-#}
+autoload -Uz compinit
+compinit -d ~/.cache/zcompdump
 
-# enable color support of ls, less and man, and also add handy aliases
+zstyle ':completion:*:*:*:*:*' menu select
+zstyle ':completion:*' completer _complete _approximate
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}' # case insensitive tab completion
+zstyle ':completion:*' insert-tab pending             # pasting with tabs doesn't perform completion
+
+# Use LS_COLORS for completion if available — zsh parameter expansion syntax
+if [ -n "$LS_COLORS" ]; then
+    # shellcheck disable=SC2296
+    zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+fi
+
+# ════════════════════════════════════════════════════════════════
+# Source: 05-colors.zsh
+# ════════════════════════════════════════════════════════════════
+
+# Colors for ls, grep, less, man
+
 if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls='ls --color=auto'
-    #alias dir='dir --color=auto'
-    #alias vdir='vdir --color=auto'
+    if test -r ~/.dircolors; then
+        eval "$(dircolors -b ~/.dircolors)"
+    else
+        eval "$(dircolors -b)"
+    fi
 
     alias grep='grep --color=auto'
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
     alias diff='diff --color=auto'
     alias ip='ip --color=auto'
+    alias ls='ls --color=auto'
 
+    # man page colors via less
     export LESS_TERMCAP_mb=$'\E[1;31m'     # begin blink
     export LESS_TERMCAP_md=$'\E[1;36m'     # begin bold
     export LESS_TERMCAP_me=$'\E[0m'        # reset bold/blink
@@ -133,75 +147,116 @@ if [ -x /usr/bin/dircolors ]; then
     export LESS_TERMCAP_se=$'\E[0m'        # reset reverse video
     export LESS_TERMCAP_us=$'\E[1;32m'     # begin underline
     export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
-
-    # Take advantage of $LS_COLORS for completion as well
-    zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 fi
 
-# some more ls aliases
-if which exa &> /dev/null; then
-    alias ll='exa --icons --group-directories-first --octal-permissions --time-style=long-iso -lsnew "${@:2}" -lha'
-    alias la='ls -A'
-    alias l='ls -CF'
-    alias lt='exa --tree --icons --level=2 --long --time-style=long-iso -ah -I ".git|__pycache__|.mypy_cache|.ipynb_checkpoints"'
-elif which eza &> /dev/null; then
-    alias ll='eza --icons --group-directories-first --octal-permissions --time-style=long-iso -lsnew "${@:2}" -lha'
-    alias la='ls -A'
-    alias l='ls -CF'
+# ════════════════════════════════════════════════════════════════
+# Source: 06-aliases.zsh
+# ════════════════════════════════════════════════════════════════
+
+# Aliases
+
+# ls / eza / exa
+if command -v eza &>/dev/null; then
+    alias ll='eza --icons --group-directories-first --octal-permissions --time-style=long-iso -lsnew -lha'
     alias lt='eza --tree --icons --level=2 --long --time-style=long-iso -ah -I ".git|__pycache__|.mypy_cache|.ipynb_checkpoints"'
+elif command -v exa &>/dev/null; then
+    alias ll='exa --icons --group-directories-first --octal-permissions --time-style=long-iso -lsnew -lha'
+    alias lt='exa --tree --icons --level=2 --long --time-style=long-iso -ah -I ".git|__pycache__|.mypy_cache|.ipynb_checkpoints"'
 else
     alias ll='ls -alhF'
-    alias la='ls -A'
-    alias l='ls -CF'
+fi
+alias la='ls -A'
+alias l='ls -CF'
+
+# history
+alias history="history 0"
+
+# quick awk field extraction — \$N is awk's positional param, not shell's
+alias hg='history | grep '
+alias f1="awk '{print \$1}'"
+alias f2="awk '{print \$2}'"
+alias f3="awk '{print \$3}'"
+
+# ════════════════════════════════════════════════════════════════
+# Source: 07-functions.zsh
+# ════════════════════════════════════════════════════════════════
+
+# Custom functions
+
+# Create a new executable script and open it in nano
+nanox() {
+    if [ -z "$1" ]; then
+        echo "usage: $0 <newfilename>"
+        return 1
+    fi
+    if [ ! -e "$1" ]; then
+        echo -e "#!/usr/bin/env bash\n\nset -eo pipefail\n" > "$1"
+    fi
+    chmod -v 0755 "$1"
+    nano + "$1"
+}
+
+# ════════════════════════════════════════════════════════════════
+# Source: 08-tools.zsh
+# ════════════════════════════════════════════════════════════════
+
+# Tool initialization (lazy-loaded where possible for fast shell startup)
+
+# ── pyenv (lazy) ─────────────────────────────────────────────
+if [ -x "$PYENV_ROOT/bin/pyenv" ]; then
+    pyenv() {
+        unfunction pyenv
+        eval "$("$PYENV_ROOT/bin/pyenv" init - zsh)"
+        pyenv "$@"
+    }
 fi
 
-# enable auto-suggestions based on the history
-if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
-    . /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-    # change suggestion color
-    ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=242'
+# ── nvm (lazy) ───────────────────────────────────────────────
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    nvm() {
+        unfunction nvm node npm npx 2>/dev/null
+        # shellcheck disable=SC1091
+        [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+        nvm "$@"
+    }
+    # Lazy stubs for node/npm/npx — triggers nvm load on first use
+    node() { nvm ""; unfunction node 2>/dev/null; node "$@"; }
+    npm()  { nvm ""; unfunction npm  2>/dev/null; npm "$@";  }
+    npx()  { nvm ""; unfunction npx  2>/dev/null; npx "$@";  }
 fi
+[ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
 
-# enable Z jump directory based on the history
-if [ -f /usr/share/zsh-z/zsh-z.plugin.zsh ]; then
-    source /usr/share/zsh-z/zsh-z.plugin.zsh
-    # Completion menus
-    zstyle ':completion:*' menu select
-fi
+# ── cargo ────────────────────────────────────────────────────
+[ -s "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 
-# Enable GRC colorizer to multiple commands if available, details -> nano /etc/grc.zsh
+# ── uv / uvx completions ────────────────────────────────────
+command -v uvx >/dev/null 2>&1 && eval "$(uvx --generate-shell-completion zsh)"
+command -v uv  >/dev/null 2>&1 && eval "$(uv  generate-shell-completion zsh)"
+
+# ── GRC colorizer ────────────────────────────────────────────
 [[ -s "/etc/grc.zsh" ]] && source /etc/grc.zsh
 
-# enable command-not-found if installed
-if [ -f /etc/zsh_command_not_found ]; then
-    . /etc/zsh_command_not_found
-fi
+# ── command-not-found ────────────────────────────────────────
+[ -f /etc/zsh_command_not_found ] && source /etc/zsh_command_not_found
 
-# enable completion features
-# zsh-completions
-if [ -d /usr/share/zsh-completions/src ]; then
-    fpath=(/usr/local/share/zsh/site-functions /usr/share/zsh-completions/src $fpath)
-fi
-autoload -Uz compinit
-compinit -d ~/.cache/zcompdump
-zstyle ':completion:*:*:*:*:*' menu select
-zstyle ':completion:*' completer _complete _approximate 
-zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}' # case insensitive tab completion
-# pasting with tabs doesn't perform completion
-zstyle ':completion:*' insert-tab pending
+# ── SSH agent via keychain ───────────────────────────────────
+command -v keychain >/dev/null 2>&1 && eval "$(keychain --eval --quiet --agents ssh)"
 
+# ════════════════════════════════════════════════════════════════
+# Source: 09-prompt.zsh
+# ════════════════════════════════════════════════════════════════
 
-# find out which distribution we are running on
+# Prompt — Starship with distro icon
+
+# Detect distro for icon
 LFILE="$(cat /etc/*-release 2>/dev/null)"
 MFILE="/System/Library/CoreServices/SystemVersion.plist"
-if [[ ! -z "$LFILE" ]]; then
-  _distro=$(awk '/^ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }')
-elif [[ -f $MFILE ]]; then
-  _distro="macos"
+if [[ -n "$LFILE" ]]; then
+    _distro=$(awk '/^ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }')
+elif [[ -f "$MFILE" ]]; then
+    _distro="macos"
 fi
 
-# set an icon based on the distro
-# make sure your font is compatible with https://github.com/lukas-w/font-logos
 case $_distro in
     *kali*)                  ICON="󰠥";;
     *arch*)                  ICON="";;
@@ -229,79 +284,44 @@ case $_distro in
 esac
 
 export STARSHIP_DISTRO="$ICON"
+unset LFILE MFILE _distro ICON
 
-# Make a new command.
-nanox() {
-  if [ -z "$1" ]; then
-    echo "usage: $0 <newfilename>"
-    return 1
-  fi
-  if [ ! -e "$1" ]; then
-    echo -e "#!/usr/bin/env bash\n\nset -eo pipefail\n" > "$1"
-  fi
-  chmod -v 0755 "$1"
-  nano + "$1"
-}
-
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/bin" ] ; then
-    export PATH="$HOME/bin:$PATH"
-fi
-
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/.local/bin" ] ; then
-    export PATH="$HOME/.local/bin:$PATH"
-fi
-
-#Extra Aliases
-alias hg='history | grep '
-alias f1="awk '{print \$1}'"
-alias f2="awk '{print \$2}'"
-alias f3="awk '{print \$3}'"
-
-#Starship
 eval "$(starship init zsh)"
 
-# Enable fuzzy-search if available
+# ════════════════════════════════════════════════════════════════
+# Source: 99-plugins.zsh
+# ════════════════════════════════════════════════════════════════
+
+# Plugins — loaded last (some must be after compinit / before syntax-highlighting)
+
+# Auto-suggestions based on history
+if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
+    # shellcheck disable=SC1091
+    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    # shellcheck disable=SC2034
+    ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=242'
+fi
+
+# Z — jump to directories based on history
+if [ -f /usr/share/zsh-z/zsh-z.plugin.zsh ]; then
+    # shellcheck disable=SC1091
+    source /usr/share/zsh-z/zsh-z.plugin.zsh
+fi
+
+# fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-# fzf-tab (must be after compinit, before autosuggestions/syntax-highlighting)
+# fzf-tab (must be after compinit)
 [ -f /usr/share/fzf-tab/fzf-tab.plugin.zsh ] && source /usr/share/fzf-tab/fzf-tab.plugin.zsh
 
-# Atuin (guarded)
+# Atuin (shell history)
 if [ -s "$HOME/.config/atuin/env" ] && [ -s "$HOME/.atuin/bin/atuin" ]; then
-  . "$HOME/.config/atuin/env"
-  eval "$(atuin init zsh)"
+    # shellcheck disable=SC1091
+    source "$HOME/.config/atuin/env"
+    eval "$(atuin init zsh)"
 fi
 
-[ -s "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+# MUST BE LAST: syntax highlighting
+[ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && \
+    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
-command -v uvx >/dev/null 2>&1 && eval "$(uvx --generate-shell-completion zsh)"
-command -v uv  >/dev/null 2>&1 && eval "$(uv  generate-shell-completion zsh)"
-
-export PYENV_ROOT="$HOME/.pyenv"
-
-if [ -x "$PYENV_ROOT/bin/pyenv" ]; then
-  # přidej pyenv bin jen jednou
-  case ":$PATH:" in
-    *":$PYENV_ROOT/bin:"*) : ;;
-    *) export PATH="$PYENV_ROOT/bin:$PATH" ;;
-  esac
-
-  # init path (shims)
-  eval "$("$PYENV_ROOT/bin/pyenv" init --path)"
-
-  # interaktivní init (zsh funkce/completion)
-  eval "$("$PYENV_ROOT/bin/pyenv" init - zsh)"
-fi
-
-# Načtení modulu pro úpravu příkazů v editoru
-autoload -U edit-command-line
-zle -N edit-command-line
-# Přiřazení ke klávesové zkratce Ctrl+X, E
-bindkey '^Xe' edit-command-line
-export EDITOR='nvim'  # nebo 'vim' nebo 'code --wait' pro VS Code
-
-
-# MUST BE AT END Enable syntax-highlighting if available
-[ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

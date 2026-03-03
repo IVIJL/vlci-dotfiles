@@ -6,15 +6,9 @@ add_newline = true
 # Change command timeout from 500 to 1000 ms
 command_timeout = 200
 
-# Change the default prompt format
-# ---
-# old config ...
-# format = """\
-# [╭╴](238)$env_var \
-# $all[╰─](238)$character"""
-
-# new config
-format = """$env_var $all"""
+# new config — $character and $custom.venv pulled out of $all so they appear
+# on the command line (after $line_break) instead of the info line above.
+format = """${env_var.STARSHIP_DISTRO} $all${custom.venv}$character"""
 
 # Change the default prompt characters
 [character]
@@ -107,7 +101,13 @@ disabled = true
 [python]
 symbol = "󰌠 "
 python_binary = "python3"
-disabled = true
+format = 'via [${symbol}${pyenv_prefix}${version}]($style) '
+disabled = false
+
+[custom.venv]
+command = 'basename "$VIRTUAL_ENV"'
+when = '[ -n "$VIRTUAL_ENV" ]'
+format = '[\($output\)](bold yellow) '
 
 [nodejs]
 format = "via [󰎙 $version](bold green) "

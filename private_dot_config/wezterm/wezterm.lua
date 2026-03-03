@@ -78,9 +78,23 @@ config.keys = {
 	{ key = "V", mods = "CTRL", action = act.PasteFrom("Clipboard") },
 	{ key = "Enter", mods = "SHIFT", action = wezterm.action({ SendString = "\x1b\r" }) },
 	{
-		key = "s", -- stiskni S
-		mods = "CTRL|SHIFT", -- s Ctrl+Shift
-		action = wezterm.action.SendString("screenshot\r"), -- spustí tvůj alias
+		key = "s",
+		mods = "CTRL|SHIFT",
+		action = wezterm.action_callback(function(window, pane)
+			local success, stdout, _ = wezterm.run_child_process({
+				"wsl.exe",
+				"-d",
+				"Ubuntu-24.04",
+				"--",
+				"/home/vlcak/Projekty/devbox/scripts/clip-image.sh",
+			})
+			if success then
+				local path = stdout:gsub("%s+$", "")
+				pane:send_text(path)
+			else
+				window:toast_notification("devbox clip", "No image in clipboard", nil, 3000)
+			end
+		end),
 	},
 	{
 		key = "k",
