@@ -1,0 +1,30 @@
+# shellcheck shell=bash
+# Extra aliases — sourced from ~/.zshrc if this file exists at ~/.extra_aliases
+
+# Claude Code CLI
+alias cc='claude'
+alias ccc='claude -c'
+alias ccdd='claude --dangerously-skip-permissions'
+
+alias piup='pip install -U pip'
+
+pyclean () {
+    find . -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
+}
+
+alias gs='git status'
+alias gp='git pull'
+alias mms='django-admin makemessages -l cs'
+alias cms='django-admin compilemessages -l cs'
+alias run='./manage.py runserver'
+alias sp='./manage.py shell_plus --quiet-load'
+alias wp='webpack'
+alias nrd='npm run dev'
+alias nrs='npm run serve'
+alias nrb='npm run build'
+alias pn=pnpm
+alias dev='pnpm dev'
+alias dc='docker compose'
+alias dcu='docker compose up -d --build --force-recreate'
+alias dce='docker compose exec -it web bash'
+
