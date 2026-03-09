@@ -246,6 +246,19 @@ command -v uv  >/dev/null 2>&1 && eval "$(uv  generate-shell-completion zsh)"
 # ── SSH agent via keychain ───────────────────────────────────
 command -v keychain >/dev/null 2>&1 && eval "$(keychain --eval --quiet --agents ssh)"
 
+# ── WezTerm (tab title / CWD tracking) ────────────────────
+if [ -n "$DEVCONTAINER" ]; then
+    # Export project name for WezTerm tab title (no OSC 7 — container paths don't exist on host)
+    printf '\033]1337;SetUserVar=devbox_project=%s\007' "$(printf '%s' "${HOSTNAME}" | base64)"
+else
+    # Host: OSC 7 for CWD tracking (tab duplication with correct directory)
+    # shellcheck disable=SC1003
+    __wezterm_osc7() {
+        printf '\033]7;file://%s%s\033\\' "${HOSTNAME}" "${PWD}"
+    }
+    precmd_functions+=(__wezterm_osc7)
+fi
+
 # ════════════════════════════════════════════════════════════════
 # Source: 09-prompt.zsh
 # ════════════════════════════════════════════════════════════════
