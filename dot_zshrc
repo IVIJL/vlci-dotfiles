@@ -249,10 +249,10 @@ command -v keychain >/dev/null 2>&1 && eval "$(keychain --eval --quiet --agents 
 # ── WezTerm (tab title / CWD tracking) ────────────────────
 if [ -n "$DEVCONTAINER" ]; then
     # Devbox: send hostname via OSC 7 for tab title prefix (cwd.host in WezTerm).
-    # Use "/" as CWD — container paths like /workspace don't exist on the host
-    # and cause "chdir failed" when WezTerm spawns a new tab.
+    # Use HOST_HOME as CWD so new tabs open in host's ~ instead of failing
+    # with "chdir(/workspace) failed". Falls back to / if HOST_HOME is not set.
     __wezterm_osc7() {
-        printf '\033]7;file://%s/\033\\' "${HOSTNAME}"
+        printf '\033]7;file://%s%s\033\\' "${HOSTNAME}" "${HOST_HOME:-/}"
     }
 else
     # Host: full OSC 7 for CWD tracking (tab duplication with correct directory)
