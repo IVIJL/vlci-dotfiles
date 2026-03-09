@@ -252,6 +252,7 @@ if [ -n "$DEVCONTAINER" ]; then
     # HOST_HOME as safe CWD so new tabs open in host's ~ instead of /workspace.
     __wezterm_osc7() {
         printf '\033]7;file://%s%s\033\\' "${HOSTNAME}" "${HOST_HOME:-/}"
+        printf '\033]1;%s\033\\' "${PWD##*/}"
     }
     precmd_functions+=(__wezterm_osc7)
 else
