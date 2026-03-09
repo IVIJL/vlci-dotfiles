@@ -248,19 +248,21 @@ command -v keychain >/dev/null 2>&1 && eval "$(keychain --eval --quiet --agents 
 
 # ── WezTerm (tab title / CWD tracking) ────────────────────
 if [ -n "$DEVCONTAINER" ]; then
-    # Devbox: send hostname via OSC 7 for tab title prefix (cwd.host in WezTerm).
-    # Use HOST_HOME as CWD so new tabs open in host's ~ instead of failing
-    # with "chdir(/workspace) failed". Falls back to / if HOST_HOME is not set.
+    # Devbox: OSC 7 with hostname for tab title prefix (cwd.host in WezTerm).
+    # HOST_HOME as safe CWD so new tabs open in host's ~ instead of /workspace.
     __wezterm_osc7() {
         printf '\033]7;file://%s%s\033\\' "${HOSTNAME}" "${HOST_HOME:-/}"
     }
+    precmd_functions+=(__wezterm_osc7)
 else
-    # Host: full OSC 7 for CWD tracking (tab duplication with correct directory)
-    __wezterm_osc7() {
-        printf '\033]7;file://%s%s\033\\' "${HOSTNAME}" "${PWD}"
+    # Host WSL: OSC 7 doesn't set cwd, but empty OSC 7 clears stale cwd.host
+    # left over from a previous container session. OSC 1 sets the tab title.
+    __wezterm_title() {
+        printf '\033]7;\033\\'
+        printf '\033]1;%s\033\\' "${PWD##*/}"
     }
+    precmd_functions+=(__wezterm_title)
 fi
-precmd_functions+=(__wezterm_osc7)
 
 # ════════════════════════════════════════════════════════════════
 # Source: 09-prompt.zsh
