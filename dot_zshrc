@@ -1,4 +1,15 @@
+# shellcheck shell=bash
 # Generated from conf.d/ files
+
+# Platform detection (run once, reuse everywhere)
+_IS_MACOS=false
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    _IS_MACOS=true
+    _BREW_PREFIX="$(brew --prefix 2>/dev/null)"
+    _SHARE_DIR="$_BREW_PREFIX/share"
+else
+    _SHARE_DIR="/usr/share"
+fi
 
 # ════════════════════════════════════════════════════════════════
 # Source: 01-options.zsh
@@ -21,17 +32,20 @@ unsetopt correctall
 WORDCHARS=${WORDCHARS//\/} # Don't consider '/' part of the word
 
 # hide EOL sign ('%') — used by zsh internally
+# shellcheck disable=SC2034
 PROMPT_EOL_MARK=""
 
 # History
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
+# shellcheck disable=SC2034
 SAVEHIST=10000
 setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
 setopt hist_ignore_dups       # ignore duplicated commands in history list
 setopt hist_ignore_space      # ignore commands that start with space
 setopt hist_verify            # show command with history expansion before running it
 setopt append_history         # append to history file
+setopt inc_append_history     # write to history immediately, not at shell exit
 
 # ════════════════════════════════════════════════════════════════
 # Source: 02-path.zsh
@@ -44,6 +58,7 @@ setopt append_history         # append to history file
 export PYENV_ROOT="$HOME/.pyenv"
 export NVM_DIR="$HOME/.nvm"
 
+# shellcheck disable=SC2206
 path=(
     "$HOME/bin"
     "$HOME/.local/bin"
@@ -55,6 +70,7 @@ path=(
 
 # Remove duplicate entries and non-existent directories
 typeset -U path
+# shellcheck disable=SC1036,SC1088
 path=($^path(N-/))
 
 export PATH
@@ -94,15 +110,16 @@ export EDITOR='nvim'
 # uvx) work fine after compinit and can stay in their own sections.
 
 # Add zsh-completions to fpath if available
-if [ -d /usr/share/zsh-completions/src ]; then
+if [ -d "$_SHARE_DIR/zsh-completions/src" ]; then
     # shellcheck disable=SC2206
-    fpath=(/usr/local/share/zsh/site-functions /usr/share/zsh-completions/src $fpath)
+    fpath=(/usr/local/share/zsh/site-functions "$_SHARE_DIR/zsh-completions/src" $fpath)
 fi
 
 # zsh-z ships _zshz completion file in its directory
-if [ -d /usr/share/zsh-z ]; then
+if [ -d "$_SHARE_DIR/zsh-z" ]; then
     # shellcheck disable=SC2206
-    fpath=(/usr/share/zsh-z $fpath)
+    # shellcheck disable=SC2128
+    fpath=("$_SHARE_DIR/zsh-z" $fpath)
 fi
 
 autoload -Uz compinit
@@ -125,18 +142,26 @@ fi
 
 # Colors for ls, grep, less, man
 
-if [ -x /usr/bin/dircolors ]; then
+if $_IS_MACOS; then
+    _dircolors_cmd="gdircolors"
+else
+    _dircolors_cmd="dircolors"
+fi
+
+if command -v "$_dircolors_cmd" &>/dev/null; then
     if test -r ~/.dircolors; then
-        eval "$(dircolors -b ~/.dircolors)"
+        eval "$("$_dircolors_cmd" -b ~/.dircolors)"
     else
-        eval "$(dircolors -b)"
+        eval "$("$_dircolors_cmd" -b)"
     fi
 
     alias grep='grep --color=auto'
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
     alias diff='diff --color=auto'
-    alias ip='ip --color=auto'
+    if ! $_IS_MACOS; then
+        alias ip='ip --color=auto'
+    fi
     alias ls='ls --color=auto'
 
     # man page colors via less
@@ -148,6 +173,7 @@ if [ -x /usr/bin/dircolors ]; then
     export LESS_TERMCAP_us=$'\E[1;32m'     # begin underline
     export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 fi
+unset _dircolors_cmd
 
 # ════════════════════════════════════════════════════════════════
 # Source: 06-aliases.zsh
@@ -173,8 +199,11 @@ alias history="history 0"
 
 # quick awk field extraction — \$N is awk's positional param, not shell's
 alias hg='history | grep '
+# shellcheck disable=SC2142
 alias f1="awk '{print \$1}'"
+# shellcheck disable=SC2142
 alias f2="awk '{print \$2}'"
+# shellcheck disable=SC2142
 alias f3="awk '{print \$3}'"
 
 # Extra aliases from optional file (docker, project-specific, etc.)
@@ -224,13 +253,17 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
         nvm "$@"
     }
     # Lazy stubs for node/npm/npx — triggers nvm load on first use
-    node() { nvm ""; unfunction node 2>/dev/null; node "$@"; }
-    npm()  { nvm ""; unfunction npm  2>/dev/null; npm "$@";  }
-    npx()  { nvm ""; unfunction npx  2>/dev/null; npx "$@";  }
+    # shellcheck disable=SC1091
+    _load_nvm() { unfunction _load_nvm nvm node npm npx 2>/dev/null; [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"; }
+    node() { _load_nvm; node "$@"; }
+    npm()  { _load_nvm; npm "$@";  }
+    npx()  { _load_nvm; npx "$@";  }
 fi
+# shellcheck disable=SC1091
 [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
 
 # ── cargo ────────────────────────────────────────────────────
+# shellcheck disable=SC1091
 [ -s "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 
 # ── uv / uvx completions ────────────────────────────────────
@@ -238,10 +271,18 @@ command -v uvx >/dev/null 2>&1 && eval "$(uvx --generate-shell-completion zsh)"
 command -v uv  >/dev/null 2>&1 && eval "$(uv  generate-shell-completion zsh)"
 
 # ── GRC colorizer ────────────────────────────────────────────
-[[ -s "/etc/grc.zsh" ]] && source /etc/grc.zsh
+if $_IS_MACOS; then
+    # shellcheck disable=SC1091
+    [ -f "$_BREW_PREFIX/etc/grc.zsh" ] && source "$_BREW_PREFIX/etc/grc.zsh"
+else
+    # shellcheck disable=SC1091
+    [[ -s "/etc/grc.zsh" ]] && source /etc/grc.zsh
+fi
 
 # ── command-not-found ────────────────────────────────────────
+# shellcheck disable=SC1091
 [ -f /etc/zsh_command_not_found ] && source /etc/zsh_command_not_found
+# Note: command-not-found is Linux-only (apt/pacman); macOS doesn't have it
 
 # ── SSH agent via keychain ───────────────────────────────────
 command -v keychain >/dev/null 2>&1 && eval "$(keychain --eval --quiet --agents ssh)"
@@ -250,6 +291,7 @@ command -v keychain >/dev/null 2>&1 && eval "$(keychain --eval --quiet --agents 
 if [ -n "$DEVCONTAINER" ]; then
     # Devbox: OSC 7 with hostname for tab title prefix (cwd.host in WezTerm).
     # HOST_HOME as safe CWD so new tabs open in host's ~ instead of /workspace.
+    # shellcheck disable=SC1003
     __wezterm_osc7() {
         printf '\033]7;file://%s%s\033\\' "${HOSTNAME}" "${HOST_HOME:-/}"
         printf '\033]1;%s\033\\' "${PWD##*/}"
@@ -258,6 +300,7 @@ if [ -n "$DEVCONTAINER" ]; then
 else
     # Host WSL: OSC 7 doesn't set cwd, but empty OSC 7 clears stale cwd.host
     # left over from a previous container session. OSC 1 sets the tab title.
+    # shellcheck disable=SC1003
     __wezterm_title() {
         printf '\033]7;\033\\'
         printf '\033]1;%s\033\\' "${PWD##*/}"
@@ -271,13 +314,15 @@ fi
 
 # Prompt — Starship with distro icon
 
-# Detect distro for icon
-LFILE="$(cat /etc/*-release 2>/dev/null)"
-MFILE="/System/Library/CoreServices/SystemVersion.plist"
-if [[ -n "$LFILE" ]]; then
-    _distro=$(awk '/^ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }')
-elif [[ -f "$MFILE" ]]; then
+# Detect distro/OS for icon
+if $_IS_MACOS; then
     _distro="macos"
+else
+    LFILE="$(cat /etc/*-release 2>/dev/null)"
+    if [[ -n "$LFILE" ]]; then
+        _distro=$(awk '/^ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }')
+    fi
+    unset LFILE
 fi
 
 case $_distro in
@@ -307,7 +352,7 @@ case $_distro in
 esac
 
 export STARSHIP_DISTRO="$ICON"
-unset LFILE MFILE _distro ICON
+unset _distro ICON _IS_MACOS _BREW_PREFIX
 
 eval "$(starship init zsh)"
 
@@ -318,24 +363,33 @@ eval "$(starship init zsh)"
 # Plugins — loaded last (some must be after compinit / before syntax-highlighting)
 
 # Auto-suggestions based on history
-if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
+if [ -f "$_SHARE_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
     # shellcheck disable=SC1091
-    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    source "$_SHARE_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh"
     # shellcheck disable=SC2034
     ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=242'
 fi
 
 # Z — jump to directories based on history
-if [ -f /usr/share/zsh-z/zsh-z.plugin.zsh ]; then
+if [ -f "$_SHARE_DIR/zsh-z/zsh-z.plugin.zsh" ]; then
     # shellcheck disable=SC1091
-    source /usr/share/zsh-z/zsh-z.plugin.zsh
+    source "$_SHARE_DIR/zsh-z/zsh-z.plugin.zsh"
 fi
 
 # fzf
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+if [ -f ~/.fzf.zsh ]; then
+    # shellcheck disable=SC1090
+    source ~/.fzf.zsh
+elif [ -f "$_SHARE_DIR/fzf/key-bindings.zsh" ]; then
+    # shellcheck disable=SC1091
+    source "$_SHARE_DIR/fzf/key-bindings.zsh"
+    # shellcheck disable=SC1091
+    source "$_SHARE_DIR/fzf/completion.zsh"
+fi
 
 # fzf-tab (must be after compinit)
-[ -f /usr/share/fzf-tab/fzf-tab.plugin.zsh ] && source /usr/share/fzf-tab/fzf-tab.plugin.zsh
+# shellcheck disable=SC1091
+[ -f "$_SHARE_DIR/fzf-tab/fzf-tab.plugin.zsh" ] && source "$_SHARE_DIR/fzf-tab/fzf-tab.plugin.zsh"
 
 # Atuin (shell history)
 if [ -s "$HOME/.config/atuin/env" ] && [ -s "$HOME/.atuin/bin/atuin" ]; then
@@ -345,6 +399,9 @@ if [ -s "$HOME/.config/atuin/env" ] && [ -s "$HOME/.atuin/bin/atuin" ]; then
 fi
 
 # MUST BE LAST: syntax highlighting
-[ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && \
-    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# shellcheck disable=SC1091
+[ -f "$_SHARE_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ] && \
+    source "$_SHARE_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+
+unset _SHARE_DIR
 
