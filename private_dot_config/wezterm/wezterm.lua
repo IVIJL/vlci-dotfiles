@@ -67,8 +67,8 @@ end
 config.color_scheme = globals.colorscheme
 config.enable_scroll_bar = true
 -- This is my chosen font, we will get into installing fonts on windows later
-config.font = wezterm.font("Hack Nerd Font")
-config.font_size = 11
+config.font = wezterm.font("JetBrainsMono Nerd Font")
+config.font_size = 9
 config.launch_menu = launch_menu
 -- makes my cursor blink
 config.default_cursor_style = "BlinkingBar"
@@ -78,23 +78,9 @@ config.keys = {
 	{ key = "V", mods = "CTRL", action = act.PasteFrom("Clipboard") },
 	{ key = "Enter", mods = "SHIFT", action = wezterm.action({ SendString = "\x1b\r" }) },
 	{
-		key = "s",
-		mods = "CTRL|SHIFT",
-		action = wezterm.action_callback(function(window, pane)
-			local success, stdout, _ = wezterm.run_child_process({
-				"wsl.exe",
-				"-d",
-				"Ubuntu-24.04",
-				"--",
-				"/home/vlcak/Projekty/devbox/scripts/clip-image.sh",
-			})
-			if success then
-				local path = stdout:gsub("%s+$", "")
-				pane:send_text(path)
-			else
-				window:toast_notification("devbox clip", "No image in clipboard", nil, 3000)
-			end
-		end),
+		key = "s", -- stiskni S
+		mods = "CTRL|SHIFT", -- s Ctrl+Shift
+		action = wezterm.action.SendString("screenshot\r"), -- spustí tvůj alias
 	},
 	{
 		key = "k",
@@ -159,9 +145,9 @@ config.foreground_text_hsb = {
 -- }
 
 -- This is used to set the default working directory when opening Wezterm
-config.default_cwd = "/mnt/c/Users/milos/OneDrive/Documents"
+-- config.default_cwd = "/mnt/c/Users/milos/OneDrive/Documents"
 
 -- IMPORTANT: Sets WSL2 UBUNTU-22.04 as the defualt when opening Wezterm
-config.default_domain = "WSL:Ubuntu-24.04"
+-- config.default_domain = "WSL:Ubuntu-24.04"
 
 return config
