@@ -258,6 +258,16 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
     node() { _load_nvm; node "$@"; }
     npm()  { _load_nvm; npm "$@";  }
     npx()  { _load_nvm; npx "$@";  }
+
+    # Add highest-version node bin to PATH so npm-installed CLIs (codex,
+    # task-master, …) are findable without first calling node/npm/npx.
+    # `On` = name sort reversed; with `numericglobsort` it sorts numerically,
+    # so v22 wins over v9. `(N-/)` keeps the existing PATH-cleanup contract.
+    # shellcheck disable=SC1036,SC1088
+    _nvm_bins=("$NVM_DIR"/versions/node/v*/bin(N-/On))
+    # shellcheck disable=SC2128,SC2206
+    [ -n "$_nvm_bins" ] && path=("${_nvm_bins[1]}" $path)
+    unset _nvm_bins
 fi
 # shellcheck disable=SC1091
 [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"

@@ -7,6 +7,12 @@ alias ccc='claude -c'
 alias cccd='claude -c --dangerously-skip-permissions'
 alias ccdd='claude --dangerously-skip-permissions'
 
+# Codex CLI
+alias cx='codex'
+alias cxc='codex resume --last'
+alias cxcd='codex resume --last -s danger-full-access -a never'
+alias cxdd='codex -s danger-full-access -a never'
+
 alias piup='pip install -U pip'
 
 pyclean () {
