@@ -4,14 +4,34 @@
 # Claude Code CLI
 alias cc='claude'
 alias ccc='claude -c'
-alias cccd='claude -c --dangerously-skip-permissions'
-alias ccdd='claude --dangerously-skip-permissions'
 
 # Codex CLI
 alias cx='codex'
 alias cxc='codex resume --last'
-alias cxcd='codex resume --last -s danger-full-access -a never'
-alias cxdd='codex -s danger-full-access -a never'
+
+# --- boxa guard: dangerous agent wrappers only inside boxa ---
+_in_boxa() { [ -d /etc/boxa-shared ] || [ -n "${BOXA_PROJECT_NAME:-}" ]; }
+
+_host_guard() {
+  _in_boxa && return 0
+  printf '\n\033[1;41;97m%-56s\033[0m' \
+    '' \
+    '   !!! POZOR: NEJSI V BOXE - BEZIS NA HOSTU !!!' \
+    "   $1 = plny pristup k hostu, zadny sandbox" \
+    '' >&2
+  printf '\n\n' >&2
+  [ -t 0 ] || { echo "Neinteraktivni shell — zruseno." >&2; return 1; }
+  printf 'Pro pokracovani napis HOST: ' >&2
+  local ans
+  read -r ans
+  [ "$ans" = HOST ] || { echo "Zruseno." >&2; return 1; }
+}
+
+unalias cccd ccdd cxcd cxdd 2>/dev/null
+cccd() { _host_guard cccd && claude -c --dangerously-skip-permissions "$@"; }
+ccdd() { _host_guard ccdd && claude --dangerously-skip-permissions "$@"; }
+cxcd() { _host_guard cxcd && codex resume --last -s danger-full-access -a never "$@"; }
+cxdd() { _host_guard cxdd && codex -s danger-full-access -a never "$@"; }
 
 alias piup='pip install -U pip'
 
